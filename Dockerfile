@@ -22,8 +22,8 @@ COPY requirements.txt /tmp/requirements.txt
 COPY entrypoint.sh /tmp/entrypoint.sh
 COPY config /etc/
 
-RUN groupadd -r "${APP_GRP}" \
-&&  groupadd -r supervisor \
+RUN groupadd "${APP_GRP}" \
+&&  groupadd supervisor \
 &&  useradd --create-home --home-dir "${APP_HOME}" --shell "${APP_SHELL}" --gid "${APP_GRP}" "${APP_USER}" \
 &&  usermod -a -G supervisor "${APP_USER}" \
 &&  mv /tmp/entrypoint.sh ${APP_HOME}/entrypoint.sh \
@@ -47,7 +47,6 @@ RUN groupadd -r "${APP_GRP}" \
 &&  pip install --no-cache-dir -U -r /tmp/requirements.txt \
 &&  apt-get clean \
 &&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 USER app
 WORKDIR /app
 
