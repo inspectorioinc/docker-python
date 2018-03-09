@@ -2,17 +2,18 @@ FROM python:2.7
 MAINTAINER Inspectorio DevOps <devops@inspectorio.com>
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG PIP_NO_CACHE_DIR=1
+ARG PIP_CACHE_DIR=/tmp/
 
 ENV APP_USER  app
 ENV APP_GRP   app
 ENV APP_HOME  /app
 ENV APP_SHELL /bin/bash
 ENV NGINX_WORKER 4
-ENV PIP_NO_CACHE_DIR 1
-ENV PIP_CACHE_DIR /tmp/
 
 ONBUILD ADD . "${APP_HOME}"
 ONBUILD ADD config /etc
+ONBUILD USER root
 ONBUILD WORKDIR "${APP_HOME}"
 ONBUILD RUN pipenv install --system --deploy && chown -R "${APP_USER}":"${APP_GRP}" "${APP_HOME}"
 ONBUILD USER "${APP_USER}"
