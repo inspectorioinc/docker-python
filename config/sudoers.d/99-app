@@ -1,0 +1,2 @@
+# Grant sudo permission for app user
+${APP_USER} ALL=(ALL:ALL) NOPASSWD:ALL
