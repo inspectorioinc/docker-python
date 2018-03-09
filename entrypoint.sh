@@ -4,8 +4,6 @@
 
 set -euxo pipefail
 
-export NGINX_WORKER=${NGINX_WORKER:-4}
-
 # shellcheck disable=SC2094
 envsubst < "/etc/nginx/nginx.conf" > "/etc/nginx/nginx.conf"
 
