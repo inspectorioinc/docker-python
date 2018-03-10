@@ -16,7 +16,7 @@
 ### Usage
 
 ```
-FROM inspectorioinc/python:2.7
+FROM inspectorio/python:2.7
 
 MAINTAINER Inspectorio DevOps <devops@inspectorio.com>
 
