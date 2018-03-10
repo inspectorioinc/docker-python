@@ -18,10 +18,6 @@
 ```
 FROM inspectorioinc/python:2.7
 
-ADD . /app
-
-COPY config/etc /etc/
-
-CMD ["/app/entrypoint.sh"]
+MAINTAINER Inspectorio DevOps <devops@inspectorio.com>
 
 ```
