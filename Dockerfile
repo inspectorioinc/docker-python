@@ -14,7 +14,6 @@ ENV NGINX_WORKER 4
 ONBUILD ADD . "${APP_HOME}"
 ONBUILD ADD config /etc
 ONBUILD WORKDIR "${APP_HOME}"
-ONBUILD RUN pipenv install --system --deploy && chown -R "${APP_USER}":"${APP_GRP}" "${APP_HOME}"
 
 COPY requirements.txt /tmp/requirements.txt
 COPY entrypoint.sh /tmp/entrypoint.sh
