@@ -1,4 +1,6 @@
-## Inspectorio Python 2.7 base image
+## Inspectorio Python docker base image
+
+Python version supported: `2.7`, `3.6`, `3.7`.
 
 ### Pre-installed packages
 
@@ -16,7 +18,7 @@
 ### Usage
 
 ```
-FROM inspectorio/python:2.7
+FROM inspectorio/python:<python_version>
 
 MAINTAINER Inspectorio DevOps <devops@inspectorio.com>
 

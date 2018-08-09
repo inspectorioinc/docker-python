@@ -1,5 +1,4 @@
-FROM python:2.7
-MAINTAINER Inspectorio DevOps <devops@inspectorio.com>
+FROM python:3.6
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PIP_NO_CACHE_DIR=1
@@ -11,19 +10,23 @@ ENV APP_HOME  /app
 ENV APP_SHELL /bin/bash
 ENV NGINX_WORKER 4
 
-ONBUILD ADD . "${APP_HOME}"
-ONBUILD ADD config /etc
-ONBUILD WORKDIR "${APP_HOME}"
+ONBUILD COPY . ${APP_HOME}
+ONBUILD COPY config /etc
+ONBUILD WORKDIR ${APP_HOME}
+ONBUILD RUN chmod a+x "${APP_HOME}/entrypoint.sh"
 
 COPY requirements.txt /tmp/requirements.txt
 COPY entrypoint.sh /tmp/entrypoint.sh
 COPY config /etc/
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN groupadd "${APP_GRP}" \
 &&  groupadd supervisor \
 &&  useradd --create-home --home-dir "${APP_HOME}" --shell "${APP_SHELL}" --gid "${APP_GRP}" "${APP_USER}" \
 &&  usermod -a -G supervisor "${APP_USER}" \
 &&  mv /tmp/entrypoint.sh "${APP_HOME}/entrypoint.sh" \
+&&  chmod a+x "${APP_HOME}/entrypoint.sh" \
 &&  chown -R "${APP_USER}":"${APP_GRP}" "${APP_HOME}" \
 &&  apt-get -qq -y update \
 &&  apt-get install -qq -o Dpkg::Options::="--force-confold" \

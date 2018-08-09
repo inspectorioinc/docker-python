@@ -1,0 +1,6 @@
+pipenv
+awscli
+newrelic
+gunicorn
+uwsgi
+uwsgitop
