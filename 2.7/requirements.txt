@@ -1,4 +1,5 @@
 pipenv
+poetry
 awscli
 newrelic
 gunicorn
