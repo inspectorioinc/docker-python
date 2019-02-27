@@ -43,6 +43,7 @@ RUN groupadd "${APP_GRP}" \
 &&  rm -f /etc/nginx/conf.d/* /etc/nginx/sites-enabled/* \
 &&  pip install --no-cache-dir -U -r /tmp/requirements.txt \
 &&  poetry config settings.virtualenvs.create false \
+&&  apt-get install -qq -y binutils libproj-dev gdal-bin
 &&  apt-get clean \
 &&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
