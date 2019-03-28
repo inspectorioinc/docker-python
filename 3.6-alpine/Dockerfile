@@ -1,9 +1,7 @@
-FROM alpine:3.9
+FROM python:3.6-alpine3.9
 
 ARG PIP_NO_CACHE_DIR=1
 ARG PIP_CACHE_DIR=/tmp/
-
-ENV PATH /usr/local/bin:$PATH
 
 ENV APP_USER  app
 ENV APP_GRP   app
@@ -11,130 +9,19 @@ ENV APP_HOME  /app
 ENV NGINX_WORKER 1
 ENV NGINX_VERSION 1.15.9
 
-ENV LANG C.UTF-8
-RUN apk add --no-cache ca-certificates
-
-ENV GPG_KEY 0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
-ENV PYTHON_VERSION 3.6.8
-
-RUN set -ex \
-	&& apk add --no-cache --virtual .fetch-deps \
-		gnupg \
-		tar \
-		xz \
-	\
-	&& wget -O python.tar.xz "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" \
-	&& wget -O python.tar.xz.asc "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" \
-	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$GPG_KEY" \
-	&& gpg --batch --verify python.tar.xz.asc python.tar.xz \
-	&& { command -v gpgconf > /dev/null && gpgconf --kill all || :; } \
-	&& rm -rf "$GNUPGHOME" python.tar.xz.asc \
-	&& mkdir -p /usr/src/python \
-	&& tar -xJC /usr/src/python --strip-components=1 -f python.tar.xz \
-	&& rm python.tar.xz \
-	\
-	&& apk add --no-cache --virtual .build-deps  \
-		bzip2-dev \
-		coreutils \
-		dpkg-dev dpkg \
-		expat-dev \
-		findutils \
-		gcc \
-		gdbm-dev \
-		libc-dev \
-		libffi-dev \
-		libnsl-dev \
-		libtirpc-dev \
-		linux-headers \
-		make \
-		ncurses-dev \
-		openssl-dev \
-		pax-utils \
-		readline-dev \
-		sqlite-dev \
-		tcl-dev \
-		tk \
-		tk-dev \
-		xz-dev \
-		zlib-dev \
-# add build deps before removing fetch deps in case there's overlap
-	&& apk del .fetch-deps \
-	\
-	&& cd /usr/src/python \
-	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
-	&& ./configure \
-		--build="$gnuArch" \
-		--host="$gnuArch" \
-        --with-threads \
-        --with-system-zlib \
-        --enable-unicode=ucs4 \
-		--enable-loadable-sqlite-extensions \
-		--enable-shared \
-		--with-system-expat \
-		--with-system-ffi \
-	&& make -j "$(nproc)" \
-# set thread stack size to 1MB so we don't segfault before we hit sys.getrecursionlimit()
-# https://github.com/alpinelinux/aports/commit/2026e1259422d4e0cf92391ca2d3844356c649d0
-		EXTRA_CFLAGS="-DTHREAD_STACK_SIZE=0x100000" \
-        CC=gcc \
-        'CFLAGS=-Os -fomit-frame-pointer -g' \
-        'LDFLAGS=-Wl,--as-needed' \
-        'CPPFLAGS=-Os -fomit-frame-pointer' \ 
-	&& make install \
-	\
-	&& find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec scanelf --needed --nobanner --format '%n#p' '{}' ';' \
-		| tr ',' '\n' \
-		| sort -u \
-		| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-		| xargs -rt apk add --no-cache --virtual .python-rundeps \
-	&& apk del .build-deps \
-	\
-	&& find /usr/local -depth \
-		\( \
-			\( -type d -a \( -name test -o -name tests \) \) \
-			-o \
-			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
-		\) -exec rm -rf '{}' + \
-	&& rm -rf /usr/src/python \
-	\
-	&& python3 --version
-
-# make some useful symlinks that are expected to exist
-RUN cd /usr/local/bin \
-	&& ln -s idle3 idle \
-	&& ln -s pydoc3 pydoc \
-	&& ln -s python3 python \
-	&& ln -s python3-config python-config
-
-# if this is called "PIP_VERSION", pip explodes with "ValueError: invalid truth value '<VERSION>'"
-ENV PYTHON_PIP_VERSION 19.0.2
-
-RUN set -ex; \
-	\
-	wget -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'; \
-	\
-	python get-pip.py \
-		--disable-pip-version-check \
-		--no-cache-dir \
-		"pip==$PYTHON_PIP_VERSION" \
-	; \
-	pip --version; \
-	\
-	find /usr/local -depth \
-		\( \
-			\( -type d -a \( -name test -o -name tests \) \) \
-			-o \
-			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
-		\) -exec rm -rf '{}' +; \
-	rm -f get-pip.py
-
 RUN adduser -h ${APP_HOME} -D ${APP_USER} \
     && addgroup ${APP_GRP} ${APP_USER}
 
-RUN apk add --update supervisor moreutils curl bash \
-    make automake gcc g++ jpeg-dev zlib-dev postgresql-dev git openssh-client linux-headers \
-    && rm  -rf /tmp/* /var/cache/apk/*
+RUN apk update && apk add --no-cache supervisor moreutils curl bash \
+            make automake gcc g++ jpeg-dev zlib-dev postgresql-dev git openssh-client \
+    \
+    && apk add --virtual .build-dependencies \
+            --no-cache \
+            python3-dev \
+            build-base \
+            linux-headers\
+    \
+    && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing  gdal-dev geos-dev
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -268,23 +155,20 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
-# Install GDAL and GEOS
-RUN  apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing  gdal-dev geos-dev
 
 ONBUILD COPY . ${APP_HOME}
 ONBUILD COPY config /etc
 ONBUILD WORKDIR ${APP_HOME}
 ONBUILD RUN chmod a+x "${APP_HOME}/entrypoint.sh"
 
+
 COPY requirements.txt /tmp/requirements.txt
 
 RUN mkdir -p /etc/supervisor/conf.d/ /opt/run/ \
-    && chown app:app /etc/supervisord.conf /etc/supervisor/conf.d/ /opt/run/ \
-    && pip install --no-cache-dir -U -r /tmp/requirements.txt
+        && chown ${APP_USER}:${APP_USER} /etc/supervisord.conf /etc/supervisor/conf.d/ /opt/run/ \
+        && pip install --no-cache-dir -U -r /tmp/requirements.txt
 
 COPY entrypoint.sh /tmp/entrypoint.sh
 COPY config /etc/
-
-WORKDIR /app
 
 CMD ["/app/entrypoint.sh"]

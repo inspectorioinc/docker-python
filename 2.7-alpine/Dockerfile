@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM python:2.7-alpine3.9
 
 ARG PIP_NO_CACHE_DIR=1
 ARG PIP_CACHE_DIR=/tmp/
@@ -9,15 +9,16 @@ ENV APP_HOME  /app
 ENV NGINX_WORKER 1
 ENV NGINX_VERSION 1.15.9
 
-RUN adduser -h ${APP_HOME} -D ${APP_USER} \
+RUN apk update && apk add --no-cache supervisor moreutils curl bash \
+            make automake gcc g++ jpeg-dev zlib-dev postgresql-dev git openssh-client \
+    \
+    && apk add --virtual .build-dependencies \
+            --no-cache \
+            python-dev \
+            build-base \
+            linux-headers \
+    && adduser -h ${APP_HOME} -D ${APP_USER} \
     && addgroup ${APP_GRP} ${APP_USER}
-
-RUN apk add --update supervisor moreutils curl bash python2 python2-dev \
-    make automake gcc g++ jpeg-dev zlib-dev postgresql-dev git openssh-client linux-headers libffi-dev \
-    && rm  -rf /tmp/* /var/cache/apk/* \
-    && python -m ensurepip && \
-    rm -r /usr/lib/python*/ensurepip && \
-    pip install --upgrade pip setuptools
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -157,16 +158,13 @@ ONBUILD COPY config /etc
 ONBUILD WORKDIR ${APP_HOME}
 ONBUILD RUN chmod a+x "${APP_HOME}/entrypoint.sh"
 
-
 COPY requirements.txt /tmp/requirements.txt
 
 RUN mkdir -p /etc/supervisor/conf.d/ /opt/run/ \
-    && chown app:app /etc/supervisord.conf /etc/supervisor/conf.d/ /opt/run/ \
-    && pip install --no-cache-dir -U -r /tmp/requirements.txt
+        && chown ${APP_USER}:${APP_USER} /etc/supervisord.conf /etc/supervisor/conf.d/ /opt/run/ /app \
+        && pip install --no-cache-dir -U -r /tmp/requirements.txt
 
 COPY entrypoint.sh /tmp/entrypoint.sh
 COPY config /etc/
-
-WORKDIR /app
 
 CMD ["/app/entrypoint.sh"]
