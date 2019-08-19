@@ -1,0 +1,9 @@
+trigger-docker-hub-build:
+  image: alpine:latest
+  script:
+    - apk add --update curl
+    - sh trigger-build.sh
+  only:
+    - web
+    - triggers
+    - schedules
