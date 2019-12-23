@@ -42,7 +42,7 @@ RUN groupadd "${APP_GRP}" \
 &&  ln -sf /dev/stderr /var/log/nginx/error.log \
 &&  rm -f /etc/nginx/conf.d/* /etc/nginx/sites-enabled/* \
 &&  pip install --no-cache-dir -U -r /tmp/requirements.txt \
-&&  poetry config settings.virtualenvs.create false \
+&&  poetry config virtualenvs.create false \
 &&  apt-get clean \
 &&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
