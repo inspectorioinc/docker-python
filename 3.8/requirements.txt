@@ -1,0 +1,7 @@
+pipenv==2018.10.13
+poetry
+awscli
+newrelic
+gunicorn
+uwsgi
+uwsgitop
