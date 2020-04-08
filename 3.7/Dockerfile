@@ -32,7 +32,7 @@ RUN groupadd "${APP_GRP}" \
 &&  apt-get install -qq -o Dpkg::Options::="--force-confold" \
                     -y --no-install-recommends \
                     supervisor curl jq vim-nox openssh-client \
-                    moreutils gettext-base locales tzdata lsb-release \
+                    moreutils gettext-base locales tzdata lsb-release xmlsec1 \
 &&  curl -sSL http://nginx.org/keys/nginx_signing.key | apt-key add - \
 &&  echo "deb http://nginx.org/packages/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/ $(lsb_release -cs) nginx" > /etc/apt/sources.list.d/nginx.list \
 &&  apt-get -qq -y update \
