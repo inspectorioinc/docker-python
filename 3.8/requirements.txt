@@ -1,5 +1,5 @@
 pipenv==2018.10.13
-poetry
+poetry==1.0.5
 awscli
 newrelic
 gunicorn
