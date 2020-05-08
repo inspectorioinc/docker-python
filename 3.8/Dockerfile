@@ -44,7 +44,7 @@ RUN groupadd "${APP_GRP}" \
 &&  pip install --no-cache-dir -U -r /tmp/requirements.txt \
 &&  poetry config virtualenvs.create false \
 &&  apt-get clean \
-&&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+&&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 &&  mkdir -p /var/log/supervisor
 
 WORKDIR /app
